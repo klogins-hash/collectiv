@@ -86,7 +86,7 @@ export async function PUT(
 ) {
   try {
     const { slug } = await params;
-    const body = await request.json();
+    // const body = await request.json();
 
     // TODO: Implement update logic with Prisma
     // const updated = await prisma.article.update({
