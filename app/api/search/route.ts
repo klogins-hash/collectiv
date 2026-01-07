@@ -4,7 +4,7 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const query = searchParams.get('q');
-    const category = searchParams.get('category');
+    const _category = searchParams.get('category');
     const limit = parseInt(searchParams.get('limit') || '10');
 
     if (!query || query.length < 2) {
