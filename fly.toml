@@ -4,9 +4,6 @@
 app = "collectiv-v084"
 primary_region = "ord"
 
-[build]
-  builder = "docker"
-
 [env]
   NODE_ENV = "production"
   PORT = "3000"
