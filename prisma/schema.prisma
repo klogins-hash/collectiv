@@ -57,6 +57,12 @@ model Article {
   // Versioning
   versions      ArticleVersion[]
 
+  // GPT Curation
+  changeProposals ChangeProposal[]
+  relationGraphFrom ArticleRelationshipGraph[] @relation("RelationFrom")
+  relationGraphTo   ArticleRelationshipGraph[] @relation("RelationTo")
+  consistencyIssues ConsistencyIssue[]
+
   @@index([slug])
   @@index([categoryId])
   @@index([status])
@@ -153,10 +159,208 @@ model ArticleVersion {
   reason        String? // Reason for edit
 
   versionNumber Int
+
+  // GPT Curation Metadata
+  curatorConversation  CuratorConversation? @relation(fields: [curatorConversationId], references: [id])
+  curatorConversationId String?
+  curatorReasoning  String? // Why the GPT made this change
+  changeSource     String @default("manual") // manual, gpt, github, admin
+  eeaScores        Json? // Expertise, Authoritativeness, Experience, Trustworthiness
+
   createdAt     DateTime @default(now())
 
   @@index([articleId])
   @@index([editorId])
+  @@index([curatorConversationId])
+}
+
+// GPT Curation Conversation (tracks all GPT-driven changes)
+model CuratorConversation {
+  id            String   @id @default(cuid())
+  gptSessionId  String   @unique // Links to ChatGPT conversation
+
+  user          User @relation(fields: [userId], references: [id])
+  userId        String
+
+  // What the user asked for
+  userIntent    String   @db.Text // Natural language description of policy/direction change
+  systemContext String?  @db.Text // Additional context about the wiki's vision
+
+  // Changes made
+  articleVersions ArticleVersion[]
+  proposedChanges ChangeProposal[]
+
+  // Coherence metrics
+  consistencyScoreBefore Float? @default(1.0)
+  consistencyScoreAfter  Float? @default(1.0)
+  conflictsResolved Int @default(0)
+
+  // Status tracking
+  status        CuratorStatus @default(IN_PROGRESS) // in_progress, completed, cancelled
+
+  // Full audit trail
+  conversationLog Json? // Full GPT + user conversation
+
+  createdAt     DateTime @default(now())
+  completedAt   DateTime?
+
+  @@index([userId])
+  @@index([status])
+}
+
+// Change proposals from GPT (before execution)
+model ChangeProposal {
+  id            String   @id @default(cuid())
+  conversation  CuratorConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  conversationId String
+
+  article       Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  articleId     String
+
+  action        ChangeAction // update, deprecate, create, merge
+  proposedContent String?   @db.Text // For updates/creates
+  reason        String    @db.Text // Why GPT suggests this
+
+  // Impact analysis
+  affectedLinks Int? // How many inbound links would be affected
+  affectedTags  String[]
+  relatedChanges String[] // IDs of other proposals this depends on
+
+  status        ProposalStatus @default(PENDING) // pending, approved, rejected, executed
+
+  approvedBy    User? @relation(fields: [approvedById], references: [id])
+  approvedById  String?
+  approvalNote  String?
+  approvedAt    DateTime?
+
+  createdAt     DateTime @default(now())
+  executedAt    DateTime?
+
+  @@index([conversationId])
+  @@index([articleId])
+  @@index([status])
+}
+
+// Relationship graph for coherence analysis
+model ArticleRelationshipGraph {
+  id            String   @id @default(cuid())
+
+  fromArticle   Article  @relation("RelationFrom", fields: [fromArticleId], references: [id], onDelete: Cascade)
+  fromArticleId String
+
+  toArticle     Article  @relation("RelationTo", fields: [toArticleId], references: [id], onDelete: Cascade)
+  toArticleId   String
+
+  relationType  RelationType // mentions, references, contradicts, replaces, etc.
+  strength      Float @default(0.5) // 0-1: how important is this relationship
+
+  // When this was last verified/updated
+  lastVerifiedAt DateTime @default(now())
+  lastVerifiedBy String? // Which GPT conversation verified this
+
+  // Coherence notes
+  note          String?
+
+  @@unique([fromArticleId, toArticleId, relationType])
+  @@index([fromArticleId])
+  @@index([toArticleId])
+}
+
+// Consistency check results
+model ConsistencyReport {
+  id            String   @id @default(cuid())
+
+  conversation  CuratorConversation? @relation(fields: [conversationId], references: [id])
+  conversationId String?
+
+  // Overall scores
+  consistencyScore Float // 0-1 scale
+  tagConsistency   Float
+  linkConsistency  Float
+  semanticCoherence Float
+
+  // Issues found
+  issues        ConsistencyIssue[]
+  suggestions   String[] @db.Text
+
+  // When analyzed
+  analyzedAt    DateTime @default(now())
+
+  @@index([conversationId])
+}
+
+// Individual consistency issues
+model ConsistencyIssue {
+  id            String   @id @default(cuid())
+  report        ConsistencyReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  reportId      String
+
+  issueType     IssueType // tag_mismatch, broken_reference, contradiction, orphaned_content, etc.
+  severity      IssueSeverity // critical, high, medium, low
+
+  affectedArticle Article? @relation(fields: [affectedArticleId], references: [id])
+  affectedArticleId String?
+
+  description   String  @db.Text
+  suggestion    String? @db.Text
+
+  @@index([reportId])
+  @@index([affectedArticleId])
+}
+
+// Enums for curation system
+enum CuratorStatus {
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  PAUSED
+}
+
+enum ChangeAction {
+  UPDATE      // Modify existing article
+  DEPRECATE   // Mark as deprecated
+  CREATE      // Create new article
+  MERGE       // Merge two articles
+  ARCHIVE     // Archive article
+  DELETE      // Soft delete
+}
+
+enum ProposalStatus {
+  PENDING     // Waiting for user approval
+  APPROVED    // User approved
+  REJECTED    // User rejected
+  EXECUTED    // Changes applied
+  REVERTED    // Changes rolled back
+}
+
+enum RelationType {
+  MENTIONS        // Article A mentions topic from Article B
+  REFERENCES      // Article A references Article B
+  CONTRADICTS     // Articles contradict each other
+  REPLACES        // Article A replaces/supersedes Article B
+  RELATED_TO      // General relationship
+  PARENT_TOPIC    // Hierarchical relationship
+  CHILD_TOPIC     // Hierarchical relationship
+  SEE_ALSO        // Suggested reading
+  PREREQUISITE    // Article A should be read before B
+}
+
+enum IssueType {
+  TAG_MISMATCH        // Article tagged inconsistently
+  BROKEN_REFERENCE    // Link points to deprecated/deleted article
+  CONTRADICTION       // Two articles say opposite things
+  ORPHANED_CONTENT    // No inbound links/references
+  UNUSED_REFERENCE    // References something not mentioned
+  INCOMPLETE_UPDATE   // Related articles not updated
+  STYLE_INCONSISTENCY // Different tone/format
+  OUTDATED            // Content marked as outdated
+}
+
+enum IssueSeverity {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
 }
 
 model Category {
@@ -195,6 +399,10 @@ model User {
   articles      Article[] // Articles authored
   editedArticles Article[] @relation("EditedArticles")
   versions      ArticleVersion[]
+
+  // Curation relationships
+  curatorConversations CuratorConversation[]
+  proposalApprovals    ChangeProposal[] @relation("ApprovedBy")
 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
