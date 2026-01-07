@@ -1,7 +1,7 @@
 {
-  "name": "collectiv-v.084",
+  "name": "collectiv-v0.84",
   "version": "0.84.0",
-  "description": "Collectiv v.084 - A world-class AI SEO-optimized wiki encyclopedia with RAG optimization + AI-powered Curator",
+  "description": "Collectiv v0.84 - A world-class AI SEO-optimized wiki encyclopedia with RAG optimization + AI-powered Curator",
   "license": "MIT",
   "private": true,
   "scripts": {
