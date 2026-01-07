@@ -5,7 +5,7 @@ app = "collectiv-v084"
 primary_region = "ord"
 
 [build]
-  builder = "dockerfile"
+  builder = "docker"
 
 [env]
   NODE_ENV = "production"
