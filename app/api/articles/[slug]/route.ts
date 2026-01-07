@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Prisma } from '@prisma/client';
 
 // This is a placeholder API route. In production, you'd connect to your database.
 // For now, it demonstrates the structure and response format.
 
 export async function GET(
-  request: NextRequest,
-  { params }: { params: { slug: string } }
+  request: Request,
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
-    const { slug } = params;
+    const { slug } = await params;
 
     // TODO: Fetch from database using Prisma
     // const article = await prisma.article.findUnique({
