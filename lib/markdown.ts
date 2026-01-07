@@ -110,7 +110,7 @@ export function convertWikiLinksToMarkdown(
   content: string,
   baseUrl: string = '/article'
 ): string {
-  return content.replace(/\[\[([^\]]+)\]\]/g, (match, text) => {
+  return content.replace(/\[\[([^\]]+)\]\]/g, (_match, text) => {
     const slug = slugify(text);
     return `[${text}](${baseUrl}/${slug})`;
   });
