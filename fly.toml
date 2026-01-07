@@ -23,13 +23,13 @@ primary_region = "ord"
     port = 443
     handlers = ["tls", "http"]
 
-[checks]
-  [checks.http]
-    grace_period = "5s"
-    interval = "10s"
-    method = "GET"
-    path = "/"
-    timeout = "5s"
+[[checks]]
+  type = "http"
+  grace_period = "5s"
+  interval = "10s"
+  timeout = "5s"
+  method = "GET"
+  path = "/"
 
 [deploy]
   release_command = "npm run db:push || true"
