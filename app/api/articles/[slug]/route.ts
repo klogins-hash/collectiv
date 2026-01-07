@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 // For now, it demonstrates the structure and response format.
 
 export async function GET(
-  request: Request,
+  _request: Request,
   { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
