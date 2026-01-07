@@ -46,11 +46,13 @@ export async function GET(request: NextRequest) {
       },
     ];
 
+    const limitedResults = mockResults.slice(0, limit);
+
     return NextResponse.json(
       {
         query,
-        results: mockResults,
-        total: mockResults.length,
+        results: limitedResults,
+        total: limitedResults.length,
       },
       {
         headers: {
