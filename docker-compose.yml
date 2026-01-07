@@ -1,0 +1,105 @@
+version: '3.9'
+
+services:
+  # PostgreSQL Database Service
+  postgres:
+    image: postgres:16-alpine
+    container_name: collectiv-postgres
+    environment:
+      POSTGRES_USER: collectiv
+      POSTGRES_PASSWORD: collectiv_dev_password
+      POSTGRES_DB: collectiv
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U collectiv"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - collectiv-network
+
+  # Redis Cache Service (Optional but recommended)
+  redis:
+    image: redis:7-alpine
+    container_name: collectiv-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - collectiv-network
+    command: redis-server --appendonly yes
+
+  # Next.js Application Service
+  nextjs:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: collectiv-app
+    environment:
+      # Database
+      DATABASE_URL: postgresql://collectiv:collectiv_dev_password@postgres:5432/collectiv
+
+      # Next.js
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      NODE_ENV: development
+      PORT: 3000
+
+      # API
+      NEXT_PUBLIC_API_URL: http://localhost:3000/api
+
+      # Image Optimization
+      NEXT_PUBLIC_IMAGE_DOMAIN: localhost
+
+      # Search Configuration
+      SEARCH_LIMIT: "10"
+      SEARCH_TIMEOUT: "5000"
+
+      # Cache Configuration
+      CACHE_TTL: "3600"
+      CACHE_STALE_WHILE_REVALIDATE: "86400"
+      REDIS_URL: redis://redis:6379
+
+      # SEO
+      NEXT_PUBLIC_SITE_NAME: "Collectiv"
+      NEXT_PUBLIC_SITE_DESCRIPTION: "The world-class AI-optimized encyclopedia for 2026"
+      NEXT_PUBLIC_SITE_AUTHOR: "Collectiv Contributors"
+
+      # Feature Flags
+      ENABLE_COMMENTS: "false"
+      ENABLE_RATINGS: "false"
+      ENABLE_USER_AUTHENTICATION: "false"
+      ENABLE_NOTIFICATIONS: "false"
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - collectiv-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  collectiv-network:
+    driver: bridge
