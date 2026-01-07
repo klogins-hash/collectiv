@@ -1,0 +1,250 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Core wiki article model
+model Article {
+  id            String   @id @default(cuid())
+  title         String   @unique
+  slug          String   @unique
+  description   String   @db.Text
+  content       String   @db.Text // Markdown content
+  contentHtml   String   @db.Text // Cached HTML for performance
+
+  // SEO fields
+  metaTitle     String?
+  metaDescription String?
+  keywords      String[] // Array of SEO keywords
+
+  // Media
+  featuredImage String? // URL to featured image
+  images        ArticleImage[] // Related images
+
+  // Structure
+  category      Category @relation(fields: [categoryId], references: [id])
+  categoryId    String
+  subcategory   String? // Optional subcategory for organization
+
+  // Cross-references
+  relatedArticles   ArticleRelation[] @relation("from")
+  relatedByArticles ArticleRelation[] @relation("to")
+  links             ArticleLink[]
+
+  // Table of contents
+  tableOfContents   Json? // Cached structure
+  sections          ArticleSection[]
+
+  // Metadata
+  author        User @relation(fields: [authorId], references: [id])
+  authorId      String
+  editors       User[] @relation("EditedArticles")
+
+  // Status
+  status        ArticleStatus @default(DRAFT)
+  viewCount     Int @default(0)
+  likeCount     Int @default(0)
+
+  // Timestamps
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  publishedAt   DateTime?
+
+  // Versioning
+  versions      ArticleVersion[]
+
+  @@index([slug])
+  @@index([categoryId])
+  @@index([status])
+  @@index([createdAt])
+  @@fulltext([title, content]) // For full-text search
+}
+
+model ArticleImage {
+  id            String   @id @default(cuid())
+  article       Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  articleId     String
+
+  url           String
+  altText       String
+  caption       String?
+  width         Int
+  height        Int
+  size          Int // File size in bytes
+
+  // Image metadata
+  format        String // jpg, png, webp, etc.
+  priority      Int @default(0) // For ordering
+
+  createdAt     DateTime @default(now())
+
+  @@index([articleId])
+}
+
+model ArticleSection {
+  id            String   @id @default(cuid())
+  article       Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  articleId     String
+
+  title         String
+  level         Int // Heading level 1-6
+  content       String   @db.Text
+  order         Int
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([articleId])
+}
+
+// Cross-references between articles
+model ArticleRelation {
+  id            String   @id @default(cuid())
+
+  from          Article  @relation("from", fields: [fromId], references: [id], onDelete: Cascade)
+  fromId        String
+
+  to            Article  @relation("to", fields: [toId], references: [id], onDelete: Cascade)
+  toId          String
+
+  // Type of relation: "see_also", "related", "parent", "child", etc.
+  relationType  String @default("related")
+
+  createdAt     DateTime @default(now())
+
+  @@unique([fromId, toId])
+  @@index([fromId])
+  @@index([toId])
+}
+
+// External and internal links
+model ArticleLink {
+  id            String   @id @default(cuid())
+  article       Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  articleId     String
+
+  url           String
+  text          String
+  linkType      String @default("external") // internal, external
+  isValid       Boolean @default(true)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([articleId])
+}
+
+// Article versioning for history
+model ArticleVersion {
+  id            String   @id @default(cuid())
+  article       Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  articleId     String
+
+  title         String
+  content       String   @db.Text
+  editor        User @relation(fields: [editorId], references: [id])
+  editorId      String
+
+  changes       String? // JSON diff or summary
+  reason        String? // Reason for edit
+
+  versionNumber Int
+  createdAt     DateTime @default(now())
+
+  @@index([articleId])
+  @@index([editorId])
+}
+
+model Category {
+  id            String   @id @default(cuid())
+  name          String   @unique
+  slug          String   @unique
+  description   String?
+  icon          String? // Icon name or emoji
+  color         String? // Hex color for UI
+
+  articles      Article[]
+  subcategories Category[] @relation("parent")
+  parent        Category? @relation("parent", fields: [parentId], references: [id])
+  parentId      String?
+
+  order         Int @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([slug])
+}
+
+// User model for editors and contributors
+model User {
+  id            String   @id @default(cuid())
+  username      String   @unique
+  email         String   @unique
+  password      String // Hash
+
+  displayName   String
+  avatar        String? // Avatar URL
+  bio           String?
+
+  role          UserRole @default(USER)
+
+  articles      Article[] // Articles authored
+  editedArticles Article[] @relation("EditedArticles")
+  versions      ArticleVersion[]
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([username])
+}
+
+// Search index for performance
+model SearchIndex {
+  id            String   @id @default(cuid())
+  articleId     String   @unique
+  title         String
+  slug          String   @unique
+  description   String?
+  keywords      String[]
+  content       String   @db.Text // For full-text search
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@fulltext([title, content, keywords])
+}
+
+// Editor picks / featured articles
+model FeaturedArticle {
+  id            String   @id @default(cuid())
+  title         String
+  slug          String
+  description   String?
+  imageUrl      String?
+  order         Int
+
+  createdAt     DateTime @default(now())
+  expiresAt     DateTime?
+
+  @@index([order])
+}
+
+enum ArticleStatus {
+  DRAFT
+  REVIEW
+  PUBLISHED
+  ARCHIVED
+  DELETED
+}
+
+enum UserRole {
+  ADMIN
+  EDITOR
+  CONTRIBUTOR
+  USER
+  GUEST
+}

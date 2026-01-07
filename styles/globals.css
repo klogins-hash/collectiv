@@ -1,0 +1,219 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #ffffff;
+  color: #1a1a1a;
+}
+
+/* Markdown content styles */
+.prose {
+  @apply max-w-none;
+}
+
+.prose h1 {
+  @apply text-4xl font-bold mb-6 mt-8 text-gray-900;
+}
+
+.prose h2 {
+  @apply text-3xl font-bold mb-4 mt-6 text-gray-900 border-b pb-2;
+}
+
+.prose h3 {
+  @apply text-2xl font-bold mb-3 mt-4 text-gray-800;
+}
+
+.prose h4 {
+  @apply text-xl font-bold mb-2 mt-3 text-gray-800;
+}
+
+.prose p {
+  @apply mb-4 text-gray-700 leading-relaxed;
+}
+
+.prose a {
+  @apply text-blue-600 hover:text-blue-800 hover:underline transition;
+}
+
+.prose img {
+  @apply rounded-lg shadow-md my-6 max-w-full;
+}
+
+.prose ul,
+.prose ol {
+  @apply ml-6 mb-4;
+}
+
+.prose li {
+  @apply mb-2 text-gray-700;
+}
+
+.prose blockquote {
+  @apply border-l-4 border-blue-600 pl-4 py-2 my-4 bg-gray-50 italic text-gray-700;
+}
+
+.prose code {
+  @apply bg-gray-100 px-2 py-1 rounded text-sm font-mono text-red-600;
+}
+
+.prose pre {
+  @apply bg-gray-900 text-gray-100 p-4 rounded-lg overflow-auto mb-4;
+}
+
+.prose pre code {
+  @apply bg-transparent p-0 text-inherit;
+}
+
+.prose table {
+  @apply w-full border-collapse mb-4;
+}
+
+.prose th,
+.prose td {
+  @apply border border-gray-300 px-4 py-2 text-left;
+}
+
+.prose th {
+  @apply bg-gray-100 font-bold;
+}
+
+/* Wiki-specific styles */
+.toc {
+  @apply bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6;
+}
+
+.toc h3 {
+  @apply text-lg font-bold mb-3 mt-0;
+}
+
+.toc ul {
+  @apply list-none ml-0;
+}
+
+.toc a {
+  @apply text-blue-600 hover:text-blue-800 transition;
+}
+
+.reference-link {
+  @apply text-blue-600 cursor-pointer hover:underline;
+}
+
+.article-metadata {
+  @apply border-b border-gray-200 pb-4 mb-6 flex flex-wrap gap-4 text-sm text-gray-600;
+}
+
+.article-header {
+  @apply mb-6;
+}
+
+.breadcrumb {
+  @apply flex items-center gap-2 text-sm text-gray-600 mb-4;
+}
+
+.breadcrumb a {
+  @apply text-blue-600 hover:text-blue-800;
+}
+
+/* Search and nav styles */
+.search-result {
+  @apply p-4 border border-gray-200 rounded mb-2 hover:bg-gray-50 transition cursor-pointer;
+}
+
+.search-result-title {
+  @apply text-lg font-semibold text-gray-900;
+}
+
+.search-result-excerpt {
+  @apply text-gray-600 mt-1 line-clamp-2;
+}
+
+/* Related articles section */
+.related-articles {
+  @apply mt-12 pt-6 border-t border-gray-200;
+}
+
+.related-articles-grid {
+  @apply grid md:grid-cols-3 gap-4 mt-4;
+}
+
+.related-article-card {
+  @apply p-4 border border-gray-200 rounded-lg hover:shadow-md transition;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  .prose h1 {
+    @apply text-2xl;
+  }
+
+  .prose h2 {
+    @apply text-xl;
+  }
+
+  .prose h3 {
+    @apply text-lg;
+  }
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-in;
+}
+
+.slide-in {
+  animation: slideIn 0.3s ease-in;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
