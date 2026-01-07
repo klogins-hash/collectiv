@@ -13,6 +13,8 @@ interface ConsistencyCheckRequest {
 
 export async function POST(request: NextRequest) {
   try {
+    // Consume request body without assignment (implementation pending)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const _body: ConsistencyCheckRequest = await request.json();
 
     // TODO: Implement with Prisma and semantic analysis once database connected
