@@ -1,11 +1,5 @@
 import MarkdownIt from 'markdown-it';
 
-interface MarkdownOptions {
-  html?: boolean;
-  linkify?: boolean;
-  typographer?: boolean;
-}
-
 interface ParsedMarkdown {
   html: string;
   tableOfContents: Array<{ level: number; text: string; id: string }>;
