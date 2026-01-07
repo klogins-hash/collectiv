@@ -20,7 +20,6 @@ export function parseMarkdown(content: string): ParsedMarkdown {
   const toc: Array<{ level: number; text: string; id: string }> = [];
   const links: string[] = [];
   const images: string[] = [];
-  let idCounter = 0;
 
   // Custom heading renderer to build TOC
   const defaultHeadingOpen = md.renderer.rules.heading_open;
