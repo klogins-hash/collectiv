@@ -18,15 +18,6 @@ interface ChunkedContent {
   embedding?: number[]; // For vector DB storage
 }
 
-interface RAGContext {
-  chunks: ChunkedContent[];
-  metadata: {
-    totalChunks: number;
-    totalTokens: number;
-    retrievalScores: number[];
-  };
-}
-
 interface TokenEstimate {
   approximate: number;
   range: { min: number; max: number };
