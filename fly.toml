@@ -24,10 +24,11 @@ primary_region = "ord"
     handlers = ["tls", "http"]
 
 [[checks]]
-  type = "http"
+  name = "http"
   grace_period = "5s"
   interval = "10s"
   timeout = "5s"
+  type = "http"
   method = "GET"
   path = "/"
 
