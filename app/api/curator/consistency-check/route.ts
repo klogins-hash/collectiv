@@ -13,7 +13,7 @@ interface ConsistencyCheckRequest {
 
 export async function POST(request: NextRequest) {
   try {
-    const body: ConsistencyCheckRequest = await request.json();
+    const _body: ConsistencyCheckRequest = await request.json();
 
     // TODO: Implement with Prisma and semantic analysis once database connected
     // This would:
