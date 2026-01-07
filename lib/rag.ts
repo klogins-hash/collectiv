@@ -169,8 +169,6 @@ export function optimizeForRetrieval(
   const {
     minChunkSize = 512,
     maxChunkSize = 2048,
-    overlap = true,
-    contextWindow = 4096,
   } = options;
 
   const chunks: string[] = [];
