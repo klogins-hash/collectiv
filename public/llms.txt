@@ -1,0 +1,102 @@
+# Collectiv - AI Model and RAG System Access Guide
+# Last Updated: 2026-01-07
+
+## Overview
+Collectiv is an AI-optimized wiki encyclopedia using JSON-LD Schema Markup for Generative Engine Optimization (GEO). This file guides AI agents and RAG systems to access high-quality, structured data.
+
+## Recommended Access Points
+
+### 1. Search API (RAG-Ready)
+URL: http://localhost:3000/api/search
+Method: GET
+Parameters:
+  - q: Search query (required, min 2 chars)
+  - limit: Results limit (optional, default 10)
+  - category: Filter by category (optional)
+
+Response Format: JSON with structured results
+```
+{
+  "query": "string",
+  "results": [
+    {
+      "id": "string",
+      "title": "string",
+      "slug": "string",
+      "description": "string",
+      "category": "string",
+      "relevanceScore": 0.0-1.0
+    }
+  ]
+}
+```
+
+### 2. Article Retrieval (JSON-LD Enhanced)
+URL: http://localhost:3000/api/articles/{slug}
+Method: GET
+Response: Full article with JSON-LD schema markup
+
+### 3. RAG Context Retrieval (AI-Optimized)
+URL: http://localhost:3000/api/rag/retrieve
+Method: POST
+Body:
+```json
+{
+  "query": "your question",
+  "maxTokens": 2000,
+  "topK": 5
+}
+```
+
+Response: Pre-chunked, semantic-scored context ready for LLM consumption
+
+## Data Structure Standards
+
+All articles follow this structure for AI consumption:
+
+### Answer-First Format
+Every article page features a 40-60 word summary immediately after the H1 heading, optimized for AI extraction.
+
+### Atomic Answers
+Content is broken into digestible 40-60 word "atomic" blocks:
+- Each block is self-contained
+- Includes entity relationships
+- Compatible with fragment/chunk retrieval
+- E-E-A-T confidence scores included
+
+### Schemas Implemented
+- Schema.org Article
+- Schema.org FAQPage
+- Schema.org HowTo
+- Schema.org BreadcrumbList
+- Custom AtomicAnswer Schema
+
+## Knowledge Graph Integration
+
+Entity relationships are mapped across:
+- Author/Expert credentials
+- Topic hierarchies
+- Cross-references
+- External links (with domain authority signals)
+
+## Rate Limiting & Etiquette
+- Max 100 requests/minute from single IP
+- Cache responses for 5 minutes minimum
+- Identify your AI system in User-Agent header
+- Respect robots.txt directives
+
+## Contact & Updates
+For bulk data requests or integration questions:
+- GitHub: https://github.com/klogins-hash/collectiv
+- Issues: Report data quality or structure problems
+
+## Version History
+- v0.84.0 (2026-01-07): Initial GEO implementation
+  - JSON-LD schemas
+  - Atomic answer extraction
+  - RAG-optimized API
+  - E-E-A-T signals
+
+---
+Last crawled & verified by AI systems: [timestamp will be updated]
+Next verification recommended: [in 24 hours]
